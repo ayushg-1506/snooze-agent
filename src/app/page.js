@@ -136,7 +136,7 @@ export default function Dashboard() {
             <span style={{ fontSize: '0.9rem' }}>→</span>
           </button>
 
-          {repos.length === 0 && (
+          {/* Demo Button */ (
             <button className="btn-nordic-outline" onClick={handleSeedDemo} disabled={syncing}>
               Populate Demo Dossier
             </button>

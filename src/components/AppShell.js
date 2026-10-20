@@ -24,6 +24,21 @@ export default function AppShell({ children }) {
   const [toasts, setToasts] = useState([]);
   const [repos, setRepos] = useState([]);
   const [syncing, setSyncing] = useState(false);
+  const [theme, setTheme] = useState('light');
+
+  // Load saved theme
+  useEffect(() => {
+    const saved = localStorage.getItem('snooze_theme') || 'light';
+    setTheme(saved);
+    document.documentElement.setAttribute('data-theme', saved);
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+    localStorage.setItem('snooze_theme', next);
+    document.documentElement.setAttribute('data-theme', next);
+  };
 
   const addToast = (message, type = 'info') => {
     const id = Date.now();
@@ -55,6 +70,8 @@ export default function AppShell({ children }) {
     fetchRepos,
     syncing,
     setSyncing,
+    theme,
+    toggleTheme,
   };
 
   return (
@@ -91,11 +108,21 @@ export default function AppShell({ children }) {
             })}
           </nav>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span className="chip chip-sage" style={{ fontSize: '0.68rem' }}>
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--moss)', display: 'inline-block' }} />
-              NIGHT WATCH ACTIVE · GEMMA 2
+              NIGHT WATCH ACTIVE · OPEN-WEIGHT
             </span>
+
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="theme-toggle-btn"
+              title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? '🌙' : '☀️'}
+            </button>
           </div>
         </header>
 

@@ -1,3 +1,15 @@
+async function safeAggregate(col, pipeline) {
+  try {
+    const res = col.aggregate(pipeline);
+    if (res && typeof res.toArray === 'function') {
+      return await res.toArray();
+    }
+    return Array.isArray(res) ? res : await res;
+  } catch (err) {
+    console.warn('Aggregation error:', err.message);
+    return [];
+  }
+}
 import { getCollection } from './mongodb';
 import { fetchRepoIssues, LABEL_COLORS } from './github';
 import { triageIssue, generateResponse, findDuplicates } from './ai';
@@ -168,40 +180,33 @@ export async function triageRepository(repoFullName) {
  */
 export async function calculateRepoHealth(repoFullName) {
   const issuesCol = await getCollection('issues');
+  const baseQuery = { state: 'open' };
+  if (repoFullName) baseQuery.repoFullName = repoFullName;
 
-  const openIssues = await issuesCol.countDocuments({
-    repoFullName,
-    state: 'open',
-  });
+  const openIssues = await issuesCol.countDocuments(baseQuery);
 
   const criticalCount = await issuesCol.countDocuments({
-    repoFullName,
-    state: 'open',
+    ...baseQuery,
     'triage.priority': 'critical',
   });
 
   const highCount = await issuesCol.countDocuments({
-    repoFullName,
-    state: 'open',
+    ...baseQuery,
     'triage.priority': 'high',
   });
 
-  // Stale issues (no update in 14 days)
   const staleDate = new Date();
   staleDate.setDate(staleDate.getDate() - 14);
 
   const staleCount = await issuesCol.countDocuments({
-    repoFullName,
-    state: 'open',
+    ...baseQuery,
     updatedAt: { $lt: staleDate },
   });
 
-  // Calculate score (100 = perfect, 0 = terrible)
   let score = 100;
-  score -= criticalCount * 15; // Critical issues hurt a lot
-  score -= highCount * 8;
-  score -= Math.min(staleCount * 5, 25); // Stale issues cap at -25
-  score -= Math.min(openIssues * 0.5, 20); // Many open issues cap at -20
+  score -= criticalCount * 12;
+  score -= highCount * 6;
+  score -= Math.min(staleCount * 4, 20);
 
   score = Math.max(0, Math.min(100, Math.round(score)));
 
@@ -269,7 +274,7 @@ export async function getContributorInsights(repoFullName) {
     { $limit: 20 },
   ];
 
-  const contributors = await issuesCol.aggregate(pipeline).toArray();
+  const contributors = await safeAggregate(issuesCol, pipeline);
 
   return contributors.map((c) => {
     const categoryCounts = {};
@@ -343,10 +348,10 @@ export async function getAnalyticsData(repoFullName) {
   ];
 
   const [categories, priorities, sentiments, timeline] = await Promise.all([
-    issuesCol.aggregate(categoryPipeline).toArray(),
-    issuesCol.aggregate(priorityPipeline).toArray(),
-    issuesCol.aggregate(sentimentPipeline).toArray(),
-    issuesCol.aggregate(timelinePipeline).toArray(),
+    safeAggregate(issuesCol, categoryPipeline),
+    safeAggregate(issuesCol, priorityPipeline),
+    safeAggregate(issuesCol, sentimentPipeline),
+    safeAggregate(issuesCol, timelinePipeline),
   ]);
 
   // Total counts

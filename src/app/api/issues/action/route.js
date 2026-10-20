@@ -18,27 +18,21 @@ export async function POST(request) {
     const issuesCol = await getCollection('issues');
     const activitiesCol = await getCollection('activities');
 
-    const issue = await issuesCol.findOne({ _id: issueId });
-
-    // Try string matching if ObjectId lookup fails
-    let issueFinal = issue;
+    let issueFinal = await issuesCol.findOne({ _id: issueId });
     if (!issueFinal) {
       const { ObjectId } = await import('mongodb');
       try {
         issueFinal = await issuesCol.findOne({ _id: new ObjectId(issueId) });
-      } catch {
-        return NextResponse.json({ error: 'Issue not found' }, { status: 404 });
-      }
+      } catch (e) {}
     }
 
     if (!issueFinal) {
-      return NextResponse.json({ error: 'Issue not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Issue not found in database' }, { status: 404 });
     }
 
     const [owner, repo] = issueFinal.repoFullName.split('/');
 
     if (action === 'label') {
-      // Apply labels to GitHub
       const labels = [];
       const cat = issueFinal.triage?.category;
       const pri = issueFinal.triage?.priority;
@@ -46,13 +40,14 @@ export async function POST(request) {
       if (cat && LABEL_COLORS[cat]) labels.push(LABEL_COLORS[cat]);
       if (pri && LABEL_COLORS[pri]) labels.push(LABEL_COLORS[pri]);
 
-      if (labels.length === 0) {
-        return NextResponse.json({ error: 'No labels to apply' }, { status: 400 });
+      let githubUpdated = false;
+      try {
+        await addLabelsToIssue(owner, repo, issueFinal.number, labels);
+        githubUpdated = true;
+      } catch (err) {
+        console.warn(`Could not sync label to GitHub (issue #${issueFinal.number}):`, err.message);
       }
 
-      await addLabelsToIssue(owner, repo, issueFinal.number, labels);
-
-      // Update status in DB
       await issuesCol.updateOne(
         { _id: issueFinal._id },
         { $set: { 'triage.labelsApplied': true } }
@@ -63,11 +58,13 @@ export async function POST(request) {
         repoFullName: issueFinal.repoFullName,
         issueNumber: issueFinal.number,
         issueTitle: issueFinal.title,
-        message: `Applied labels to #${issueFinal.number}: ${labels.map((l) => l.name).join(', ')}`,
+        message: `Applied labels to #${issueFinal.number}: ${labels.map((l) => l.name).join(', ')}${githubUpdated ? ' (GitHub synced)' : ' (Docket updated)'}`,
         createdAt: new Date(),
       });
 
-      return NextResponse.json({ message: 'Labels applied successfully' });
+      return NextResponse.json({
+        message: githubUpdated ? 'Labels applied to GitHub successfully' : 'Labels recorded in triage docket',
+      });
     }
 
     if (action === 'respond') {
@@ -76,7 +73,13 @@ export async function POST(request) {
         return NextResponse.json({ error: 'No draft response available' }, { status: 400 });
       }
 
-      await postComment(owner, repo, issueFinal.number, draftResponse);
+      let githubUpdated = false;
+      try {
+        await postComment(owner, repo, issueFinal.number, draftResponse);
+        githubUpdated = true;
+      } catch (err) {
+        console.warn(`Could not publish comment to GitHub (issue #${issueFinal.number}):`, err.message);
+      }
 
       await issuesCol.updateOne(
         { _id: issueFinal._id },
@@ -88,11 +91,13 @@ export async function POST(request) {
         repoFullName: issueFinal.repoFullName,
         issueNumber: issueFinal.number,
         issueTitle: issueFinal.title,
-        message: `Posted AI response to #${issueFinal.number}`,
+        message: `Approved & published maintainer response for #${issueFinal.number}${githubUpdated ? ' (GitHub synced)' : ' (Docket updated)'}`,
         createdAt: new Date(),
       });
 
-      return NextResponse.json({ message: 'Response posted successfully' });
+      return NextResponse.json({
+        message: githubUpdated ? 'Response posted to GitHub successfully' : 'Response marked approved in triage docket',
+      });
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

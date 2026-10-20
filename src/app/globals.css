@@ -392,3 +392,68 @@ input, select, textarea {
     border-bottom: 1px solid var(--rule);
   }
 }
+
+/* Dark Theme Variables */
+[data-theme="dark"] {
+  --canvas: #111413;
+  --canvas-subtle: #181E1B;
+  --canvas-sunken: #141815;
+  --surface: #1B221E;
+  --surface-hover: #222B26;
+  
+  --espresso: #EAEAE4;
+  --espresso-soft: #D4D4CC;
+  --taupe: #A0A096;
+  --taupe-muted: #6E7068;
+  --rule: #29342E;
+  --rule-strong: #EAEAE4;
+
+  --moss: #88A894;
+  --moss-light: #9BB8A6;
+  --sage: #97B6A3;
+  --sage-soft: #ABC5B6;
+  --sage-wash: #1C2B22;
+
+  --terracotta: #E2734C;
+  --terracotta-soft: #EAA888;
+  --terracotta-wash: #331F18;
+  --ochre: #DCAE46;
+  --ochre-wash: #2B2516;
+  --celadon: #6EA1B3;
+  --celadon-wash: #192730;
+
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Hide Next.js dev indicator portal completely */
+nextjs-portal,
+[data-nextjs-dev-overlay],
+[data-nextjs-toast-wrapper],
+div[data-nextjs-indicator],
+#__next-build-watcher {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  background: var(--canvas-subtle);
+  border: 1px solid var(--rule);
+  color: var(--espresso);
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--surface);
+  border-color: var(--moss);
+}

@@ -223,7 +223,11 @@ class LocalCollection {
         items = items.slice(0, stage.$limit);
       }
     }
-    return items;
+    return {
+      _items: items,
+      async toArray() { return this._items; },
+      then(resolve) { return resolve(this._items); }
+    };
   }
 }
 

@@ -10,7 +10,11 @@ function getAIProvider() {
 
   if (groqKey) {
     if (!groqInstance) groqInstance = new Groq({ apiKey: groqKey });
-    return { type: 'groq', client: groqInstance };
+    return {
+      type: 'groq',
+      client: groqInstance,
+      model: process.env.GROQ_MODEL || 'qwen/qwen3.8-27b',
+    };
   }
 
   if (googleKey) {
@@ -18,7 +22,7 @@ function getAIProvider() {
     return {
       type: 'gemma',
       client: googleGenAI,
-      model: process.env.GEMMA_MODEL || 'gemini-1.5-flash',
+      model: process.env.GEMMA_MODEL || 'gemma-2-27b-it',
     };
   }
 
@@ -26,7 +30,7 @@ function getAIProvider() {
 }
 
 /**
- * Triage a single GitHub issue using open-weight AI (Gemma / Llama 3.1)
+ * Triage a single GitHub issue using open-weight AI
  */
 export async function triageIssue(issue) {
   const provider = getAIProvider();
@@ -35,18 +39,20 @@ export async function triageIssue(issue) {
   if (provider.type === 'groq') {
     try {
       const response = await provider.client.chat.completions.create({
-        model: 'llama-3.1-70b-versatile',
+        model: provider.model,
         messages: [
           {
             role: 'system',
-            content: `You are Snooze Agent, an expert GitHub issue triage bot powered by open-weight AI. Always respond with strict valid JSON.`,
+            content: `You are Snooze Agent, an expert GitHub issue triage bot powered by open-weight AI. You MUST respond with ONLY valid JSON and nothing else.`,
           },
           { role: 'user', content: prompt },
         ],
         temperature: 0.1,
-        response_format: { type: 'json_object' },
+        max_tokens: 600,
       });
-      return normalizeTriageResult(JSON.parse(response.choices[0]?.message?.content || '{}'));
+      const text = response.choices[0]?.message?.content || '{}';
+      const cleanJson = extractJSON(text);
+      return normalizeTriageResult(JSON.parse(cleanJson));
     } catch (err) {
       console.warn('Groq triage failed, falling back:', err.message);
     }
@@ -54,21 +60,17 @@ export async function triageIssue(issue) {
 
   if (provider.type === 'gemma') {
     try {
-      const model = provider.client.getGenerativeModel({
-        model: provider.model,
-        generationConfig: { responseMimeType: 'application/json' },
-      });
+      const model = provider.client.getGenerativeModel({ model: provider.model });
       const result = await model.generateContent(
-        `System: You are Snooze Agent, an expert open-source triage assistant. Respond only with JSON.\n\n${prompt}`
+        `System: You are Snooze Agent, an expert open-source triage assistant. Respond with ONLY JSON.\n\n${prompt}`
       );
       const text = result.response.text();
-      return normalizeTriageResult(JSON.parse(text));
+      return normalizeTriageResult(JSON.parse(extractJSON(text)));
     } catch (err) {
       console.warn('Gemma triage failed, falling back:', err.message);
     }
   }
 
-  // Smart heuristic triage fallback if AI providers are offline/unset
   return heuristicTriage(issue);
 }
 
@@ -86,13 +88,15 @@ Summary: ${triageResult.summary}`;
   if (provider.type === 'groq') {
     try {
       const res = await provider.client.chat.completions.create({
-        model: 'llama-3.1-70b-versatile',
+        model: provider.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 350,
       });
       return res.choices[0]?.message?.content?.trim() || '';
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Groq draft error:', e.message);
+    }
   }
 
   if (provider.type === 'gemma') {
@@ -103,13 +107,11 @@ Summary: ${triageResult.summary}`;
     } catch (e) {}
   }
 
-  // Template-based dynamic response fallback
+  // Template-based fallback
   if (triageResult.category === 'bug') {
-    return `Thanks for catching this. I've flagged this bug as ${triageResult.priority} priority. Could you verify if you're on the latest release and share your environment details (OS, Node version) and a minimal reproduction snippet? We will take a look.`;
+    return `Thanks for catching this. I have flagged this bug as ${triageResult.priority} priority. Could you verify your environment details (OS, Node version) and a minimal reproduction snippet? We will take a look.`;
   } else if (triageResult.category === 'feature') {
     return `Appreciate the suggestion! This is an interesting feature idea. We will evaluate how this aligns with the current roadmap and discuss the implementation scope with the team.`;
-  } else if (triageResult.category === 'docs') {
-    return `Good catch on the documentation gap. Clear documentation saves everyone time. If you would like to open a quick PR to clarify this section, we would be glad to review and merge it!`;
   }
   return `Thanks for bringing this up. We have queued this up for triage and will review the details shortly. Feel free to add any additional context or logs in the meantime.`;
 }
@@ -120,20 +122,22 @@ Summary: ${triageResult.summary}`;
 export async function generateBriefing(issuesSummary) {
   const provider = getAIProvider();
   const prompt = `You are Snooze Agent (a sloth-themed AI that triaged GitHub overnight so the maintainer could sleep).
-Write a 3-paragraph morning briefing based on this overnight activity:
+Write a 2-paragraph morning briefing based on this overnight activity:
 ${issuesSummary}
 Tone: Relaxed, sharp, helpful sloth. Mention high-priority issues first, note overall issue volume, and end with an encouraging word for the day.`;
 
   if (provider.type === 'groq') {
     try {
       const res = await provider.client.chat.completions.create({
-        model: 'llama-3.1-70b-versatile',
+        model: provider.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 450,
       });
       return res.choices[0]?.message?.content?.trim() || '';
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Groq briefing error:', e.message);
+    }
   }
 
   if (provider.type === 'gemma') {
@@ -148,7 +152,7 @@ Tone: Relaxed, sharp, helpful sloth. Mention high-priority issues first, note ov
 }
 
 /**
- * Find potential duplicates
+ * Duplicate detector
  */
 export async function findDuplicates(title, body, existingIssues) {
   if (!existingIssues || existingIssues.length === 0) return [];
@@ -175,11 +179,14 @@ export async function findDuplicates(title, body, existingIssues) {
       });
     }
   }
-
   return matched.slice(0, 3);
 }
 
-// Helpers
+function extractJSON(str) {
+  const match = str.match(/\{[\s\S]*\}/);
+  return match ? match[0] : str;
+}
+
 function buildTriagePrompt(issue) {
   return `Analyze this GitHub issue and return ONLY a valid JSON object:
 Title: ${issue.title}
@@ -210,7 +217,7 @@ function normalizeTriageResult(result) {
     priorityConfidence: Math.min(1, Math.max(0.1, result.priorityConfidence || 0.8)),
     sentiment: sentiments.includes(result.sentiment) ? result.sentiment : 'neutral',
     summary: (result.summary || 'Issue triaged by Snooze Agent').slice(0, 160),
-    reasoning: result.reasoning || 'Classified based on keywords and issue description.',
+    reasoning: result.reasoning || 'Classified based on keywords and description.',
   };
 }
 
@@ -220,27 +227,27 @@ function heuristicTriage(issue) {
   let priority = 'medium';
   let sentiment = 'neutral';
 
-  if (content.match(/crash|error|exception|fail|broken|bug|reproduce|traceback|undefined|null pointer/)) {
+  if (content.match(/crash|error|exception|fail|broken|bug|reproduce|traceback|undefined/)) {
     category = 'bug';
-  } else if (content.match(/feature|request|suggest|would be great|add support|proposal|idea/)) {
+  } else if (content.match(/feature|request|suggest|would be great|proposal|idea/)) {
     category = 'feature';
-  } else if (content.match(/doc|readme|typo|guide|tutorial|example/)) {
+  } else if (content.match(/doc|readme|typo|guide|tutorial/)) {
     category = 'docs';
-  } else if (content.match(/improve|optimize|refactor|faster|performance/)) {
+  } else if (content.match(/improve|optimize|refactor|performance/)) {
     category = 'enhancement';
   }
 
-  if (content.match(/critical|security|vulnerability|leak|data loss|urgent|production down|emergency/)) {
+  if (content.match(/critical|security|vulnerability|leak|data loss|urgent|production down/)) {
     priority = 'critical';
-  } else if (category === 'bug' && content.match(/cannot|blocking|fatal|broken for all/)) {
+  } else if (category === 'bug' && content.match(/cannot|blocking|fatal/)) {
     priority = 'high';
-  } else if (category === 'docs' || content.match(/minor|nit|cosmetic/)) {
+  } else if (category === 'docs') {
     priority = 'low';
   }
 
-  if (content.match(/angry|frustrated|ridiculous|terrible|hate|waste of time|still broken|!{2,}/)) {
+  if (content.match(/angry|frustrated|terrible|still broken|!{2,}/)) {
     sentiment = 'frustrated';
-  } else if (content.match(/love|great|awesome|thank you|appreciate|kudos/)) {
+  } else if (content.match(/love|great|awesome|thank you|appreciate/)) {
     sentiment = 'positive';
   }
 
