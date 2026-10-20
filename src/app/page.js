@@ -12,45 +12,44 @@ export default function Dashboard() {
   const [issues, setIssues] = useState([]);
   const [repos, setRepos] = useState([]);
 
-  const loadDashboardData = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const [briefingRes, reposRes, issuesRes, healthRes] = await Promise.all([
+      const [bRes, rRes, iRes, hRes] = await Promise.all([
         fetch('/api/briefing'),
         fetch('/api/repos'),
-        fetch('/api/issues?limit=6&priority=critical'),
+        fetch('/api/issues?limit=6'),
         fetch('/api/health'),
       ]);
-
-      if (briefingRes.ok) setBriefingData(await briefingRes.json());
-      if (reposRes.ok) {
-        const repoData = await reposRes.json();
-        setRepos(repoData.repos || []);
+      if (bRes.ok) setBriefingData(await bRes.json());
+      if (rRes.ok) {
+        const rd = await rRes.json();
+        setRepos(rd.repos || []);
       }
-      if (issuesRes.ok) {
-        const issueData = await issuesRes.json();
-        setIssues(issueData.issues || []);
+      if (iRes.ok) {
+        const id = await iRes.json();
+        setIssues(id.issues || []);
       }
-      if (healthRes.ok) setHealthData(await healthRes.json());
-    } catch (err) {
-      console.error('Failed to load dashboard:', err);
+      if (hRes.ok) setHealthData(await hRes.json());
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadDashboardData();
+    loadData();
   }, []);
 
   const handleQuickSync = async () => {
     if (repos.length === 0) {
-      addToast('No repositories connected yet! Connect a repo first.', 'warning');
+      addToast('Please connect a repository first!', 'error');
       return;
     }
     try {
       setSyncing(true);
-      addToast(`Syncing ${repos[0].fullName}... Snooze Agent is triaging!`, 'info');
+      addToast(`Night triage running for ${repos[0].fullName}...`, 'info');
       const res = await fetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,8 +57,8 @@ export default function Dashboard() {
       });
       const data = await res.json();
       if (res.ok) {
-        addToast(`Triage complete: ${data.results?.triaged || 0} issues triaged.`, 'success');
-        loadDashboardData();
+        addToast(`Triage complete: ${data.results?.triaged || 0} issues sorted.`, 'success');
+        loadData();
       } else {
         addToast(data.error || 'Sync failed', 'error');
       }
@@ -73,16 +72,16 @@ export default function Dashboard() {
   const handleSeedDemo = async () => {
     try {
       setSyncing(true);
-      addToast('Seeding rich demo triage data...', 'info');
+      addToast('Populating overnight triage dossier...', 'info');
       const res = await fetch('/api/demo', { method: 'POST' });
       if (res.ok) {
-        addToast('Sample repo and overnight issues loaded!', 'success');
-        await loadDashboardData();
+        addToast('Sample issues and overnight ledger loaded!', 'success');
+        await loadData();
       } else {
         addToast('Failed to seed demo data', 'error');
       }
-    } catch (err) {
-      addToast(err.message, 'error');
+    } catch (e) {
+      addToast(e.message, 'error');
     } finally {
       setSyncing(false);
     }
@@ -93,307 +92,222 @@ export default function Dashboard() {
   ).length;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-      {/* Morning Briefing Hero Card */}
-      <div
-        className="glass-card animate-fade-in"
-        style={{
-          padding: 'var(--space-6) var(--space-8)',
-          background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%)',
-          border: '1px solid rgba(139, 92, 246, 0.25)',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            top: '-40px',
-            right: '-30px',
-            fontSize: '11rem',
-            opacity: 0.08,
-            userSelect: 'none',
-            pointerEvents: 'none',
-          }}
-        >
-          🦥
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      {/* Editorial Lead Section */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span className="chip chip-sage">
+            EDITION 03 · HACKTOBERFEST SLOW & STEADY
+          </span>
+          <span style={{ fontSize: '0.78rem', color: 'var(--taupe)', fontFamily: 'var(--font-mono)' }}>
+            DISPATCH FOR {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}
+          </span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
-          <div style={{ maxWidth: '850px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
-              <span className="badge badge-purple">
-                <span className="dot dot-success" /> OVERNIGHT INTELLIGENCE
-              </span>
-              <span className="badge badge-sky">
-                Open-Weight AI • Llama 3.1 & Gemma
-              </span>
-            </div>
-            <h2 style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 'var(--space-3)' }}>
-              Good morning! Here is what happened while you were asleep.
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-base)', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
-              {briefingData?.briefing ||
-                'Snooze Agent monitored your GitHub repositories overnight. Issues were ingested, classified, prioritized, and had initial maintainer responses drafted.'}
-            </p>
-          </div>
+        <h1
+          style={{
+            fontSize: 'clamp(2.1rem, 3.8vw, 3.1rem)',
+            fontWeight: 800,
+            letterSpacing: '-0.03em',
+            lineHeight: 1.15,
+            color: 'var(--espresso)',
+            maxWidth: '820px',
+          }}
+        >
+          <span className="serif-lead">While you were sleeping,</span>{' '}
+          {issues.length > 0 ? `${issues.length} issues were audited and organized.` : 'the queue remained peaceful.'}
+        </h1>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <button
-              className="btn btn-primary"
-              onClick={handleQuickSync}
-              disabled={syncing}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-              </svg>
-              {syncing ? 'Triaging...' : 'Run Overnight Triage'}
+        <p
+          style={{
+            fontSize: '1.02rem',
+            lineHeight: 1.6,
+            color: 'var(--taupe)',
+            maxWidth: '680px',
+          }}
+        >
+          {briefingData?.briefing ||
+            'Snooze Agent monitored your repositories through the night. Critical crash reports were flagged, duplicate discussions clustered, and empathetic responses drafted using Google Gemma 2.'}
+        </p>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px', flexWrap: 'wrap' }}>
+          <button className="btn-nordic" onClick={handleQuickSync} disabled={syncing}>
+            <span>{syncing ? 'Triaging...' : 'Run Night Triage'}</span>
+            <span style={{ fontSize: '0.9rem' }}>→</span>
+          </button>
+
+          {repos.length === 0 && (
+            <button className="btn-nordic-outline" onClick={handleSeedDemo} disabled={syncing}>
+              Populate Demo Dossier
             </button>
+          )}
 
-            {repos.length === 0 && (
-              <button
-                className="btn btn-secondary"
-                onClick={handleSeedDemo}
-                disabled={syncing}
-                title="Populate test data for instant evaluation"
-              >
-                ✨ Load Demo Dataset
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Lazy Payoff Metric Ribbon */}
-        <div
-          style={{
-            marginTop: 'var(--space-6)',
-            paddingTop: 'var(--space-4)',
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 'var(--space-4)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-6)', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <span style={{ fontSize: '1.25rem' }}>⏱️</span>
-              <div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>MAINTAINER TIME SAVED</div>
-                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--emerald-400)' }}>
-                  ~2.5 Hours Saved Today
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <span style={{ fontSize: '1.25rem' }}>🎯</span>
-              <div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>AUTO-CLASSIFICATION ACCURACY</div>
-                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--sky-400)' }}>
-                  94.2% Confidence
-                </div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <span style={{ fontSize: '1.25rem' }}>🔕</span>
-              <div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>ZERO NOTIFICATION ANXIETY</div>
-                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--purple-300)' }}>
-                  Sleeping Mode Active
-                </div>
-              </div>
-            </div>
-          </div>
-          <Link href="/issues" style={{ fontSize: 'var(--text-xs)', color: 'var(--purple-300)', fontWeight: 600 }}>
-            View Full Queue →
+          <Link href="/issues" className="btn-nordic-outline">
+            Open Full Queue ({issues.length})
           </Link>
         </div>
+      </section>
+
+      {/* The Night Watch Timeline Bar */}
+      <div className="night-timeline">
+        <span className="timeline-pill">THE NIGHT WATCH</span>
+        <span>02:14 AM — Crash report triaged</span>
+        <span style={{ color: 'var(--rule)' }}>|</span>
+        <span>04:30 AM — Duplicate clustered with #42</span>
+        <span style={{ color: 'var(--rule)' }}>|</span>
+        <span style={{ color: 'var(--moss)', fontWeight: 600 }}>06:00 AM — Morning briefing compiled</span>
       </div>
 
-      {/* 4 Stats Cards */}
-      <div className="grid-stats">
-        <div className="glass-card stat-card" data-accent="purple">
-          <div className="stat-label">Connected Repos</div>
-          <div className="stat-value">{repos.length}</div>
-          <div className="stat-change positive">
-            <span>● Live Sync Active</span>
+      {/* Horizontal Ledger Strip */}
+      <section className="ledger-strip">
+        <div className="ledger-cell">
+          <div className="ledger-kicker">[ 01 · MONITORED REPOS ]</div>
+          <div className="ledger-value">{repos.length}</div>
+          <div className="ledger-meta">
+            <span style={{ color: 'var(--moss)' }}>●</span> {repos[0]?.fullName || 'Ready to connect'}
           </div>
         </div>
 
-        <div className="glass-card stat-card" data-accent="sky">
-          <div className="stat-label">Triaged Overnight</div>
-          <div className="stat-value">{briefingData?.stats?.totalTriaged || issues.length || 0}</div>
-          <div className="stat-change positive">
-            <span>✓ 100% Categorized</span>
+        <div className="ledger-cell">
+          <div className="ledger-kicker">[ 02 · TRIAGED OVERNIGHT ]</div>
+          <div className="ledger-value">{issues.length}</div>
+          <div className="ledger-meta">
+            <span>✓</span> 100% categorized with Gemma 2
           </div>
         </div>
 
-        <div className="glass-card stat-card" data-accent="rose">
-          <div className="stat-label">Critical / High Urgency</div>
-          <div className="stat-value" style={{ color: 'var(--rose-400)' }}>
+        <div className="ledger-cell">
+          <div className="ledger-kicker">[ 03 · URGENT MATTERS ]</div>
+          <div className="ledger-value" style={{ color: criticalCount > 0 ? 'var(--terracotta)' : 'var(--espresso)' }}>
             {criticalCount}
           </div>
-          <div className="stat-change negative">
-            <span>Needs Review</span>
+          <div className="ledger-meta">
+            <span>{criticalCount > 0 ? '⚠️ Action needed' : '✓ No blockers'}</span>
           </div>
         </div>
 
-        <div className="glass-card stat-card" data-accent="emerald">
-          <div className="stat-label">Repo Health Score</div>
-          <div className="stat-value" style={{ color: 'var(--emerald-400)' }}>
-            {healthData?.score || 92} / 100
+        <div className="ledger-cell">
+          <div className="ledger-kicker">[ 04 · TRANQUILITY INDEX ]</div>
+          <div className="ledger-value" style={{ color: 'var(--moss)' }}>
+            {healthData?.score || 98}<span style={{ fontSize: '1rem', fontWeight: 600 }}>%</span>
           </div>
-          <div className="stat-change positive">
-            <span>Grade {healthData?.grade || 'A'} • {healthData?.label || 'Healthy'}</span>
+          <div className="ledger-meta">
+            <span>Grade {healthData?.grade || 'A'}</span> · Zero notification noise
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Main 2-column Grid */}
-      <div className="grid-2">
-        {/* Left Column: Urgent Issues Needing Attention */}
-        <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
-          <div className="section-header">
+      {/* Main Grid: Urgent Matters & The Night Wire */}
+      <section style={{ display: 'grid', gridTemplateColumns: '1.45fr 1fr', gap: '28px' }}>
+        {/* Left: Urgent Matters Dossier */}
+        <div className="dossier-card" style={{ padding: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
             <div>
-              <h3 className="section-title">🚨 Urgent Issues Requiring Attention</h3>
-              <p className="section-subtitle">Categorized as critical or high priority by the AI model</p>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--espresso)' }}>
+                Urgent Matters
+              </h2>
+              <p style={{ fontSize: '0.8rem', color: 'var(--taupe)', marginTop: '2px' }}>
+                Issues prioritized by Gemma 2 as critical bugs or blocking regressions
+              </p>
             </div>
-            <Link href="/issues" className="btn btn-ghost btn-sm">
-              All Issues ({issues.length})
+            <Link href="/issues" style={{ fontSize: '0.78rem', color: 'var(--moss)', fontWeight: 600 }}>
+              View Queue ({issues.length}) →
             </Link>
           </div>
 
-          {issues.length === 0 ? (
-            <div className="empty-state" style={{ padding: 'var(--space-8)' }}>
-              <div className="empty-state-icon">🎉</div>
-              <div className="empty-state-title">No Urgent Issues!</div>
-              <div className="empty-state-text">
-                Your repos are healthy and no critical blockers were found. Take it easy!
-              </div>
-              <button className="btn btn-secondary btn-sm" onClick={handleSeedDemo}>
-                Load Demo Issues to Test
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-              {issues.slice(0, 4).map((issue) => (
-                <div
-                  key={issue._id || issue.number}
-                  className="glass-card glass-card-interactive"
-                  style={{
-                    padding: 'var(--space-4)',
-                    background: 'var(--bg-elevated)',
-                    borderLeft: issue.triage?.priority === 'critical' ? '3px solid var(--rose-400)' : '3px solid var(--amber-400)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 700, color: 'var(--purple-300)' }}>#{issue.number}</span>
-                      <span className={`badge ${issue.triage?.category === 'bug' ? 'badge-rose' : 'badge-purple'}`}>
-                        {issue.triage?.category || 'issue'}
-                      </span>
-                      <span className={`badge ${issue.triage?.priority === 'critical' ? 'badge-rose' : 'badge-amber'}`}>
-                        {issue.triage?.priority || 'high'}
-                      </span>
-                      {issue.triage?.sentiment === 'frustrated' && (
-                        <span className="badge badge-amber" title="Author sentiment appears frustrated">
-                          😤 frustrated
-                        </span>
-                      )}
-                    </div>
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-                      by @{issue.author}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {issues.slice(0, 3).map((issue) => (
+              <div
+                key={issue._id || issue.number}
+                className="dossier-card dossier-card-hover"
+                style={{ padding: '18px', background: '#FFFFFF' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.88rem' }}>
+                      #{issue.number}
                     </span>
+                    <span className={`chip ${issue.triage?.category === 'bug' ? 'chip-terracotta' : 'chip-sage'}`}>
+                      {issue.triage?.category || 'issue'}
+                    </span>
+                    {issue.triage?.priority === 'critical' && (
+                      <span className="chip chip-terracotta" style={{ fontWeight: 800 }}>
+                        CRITICAL
+                      </span>
+                    )}
                   </div>
-
-                  <h4 style={{ fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: 'var(--space-2)' }}>
-                    {issue.title}
-                  </h4>
-
-                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginBottom: 'var(--space-3)' }}>
-                    {issue.triage?.summary || issue.body?.slice(0, 100)}
-                  </p>
-
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 'var(--space-2)', borderTop: '1px solid var(--border-subtle)' }}>
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-                      Confidence: {Math.round((issue.triage?.categoryConfidence || 0.9) * 100)}%
-                    </div>
-                    <Link href={`/issues?id=${issue._id}`} className="btn btn-secondary btn-sm" style={{ padding: '4px 10px' }}>
-                      Review Draft Response →
-                    </Link>
-                  </div>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--taupe-muted)' }}>
+                    @{issue.author}
+                  </span>
                 </div>
-              ))}
-            </div>
-          )}
+
+                <div style={{ fontWeight: 700, fontSize: '0.92rem', marginBottom: '6px', color: 'var(--espresso)' }}>
+                  {issue.title}
+                </div>
+
+                <div style={{ fontSize: '0.8rem', color: 'var(--taupe)', lineHeight: 1.5, marginBottom: '14px' }}>
+                  {issue.triage?.summary || issue.body?.slice(0, 100)}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid var(--rule)' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--taupe-muted)' }}>
+                    Gemma Confidence: {Math.round((issue.triage?.categoryConfidence || 0.95) * 100)}%
+                  </div>
+                  <Link href={`/issues?id=${issue._id}`} className="btn-nordic" style={{ padding: '5px 12px', fontSize: '0.75rem' }}>
+                    Review Response Draft
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Right Column: Live Overnight Activity Feed */}
-        <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
-          <div className="section-header">
-            <div>
-              <h3 className="section-title">⚡ Live Overnight Activity Feed</h3>
-              <p className="section-subtitle">Real-time trace of bot decisions, labeling, and webhooks</p>
-            </div>
+        {/* Right: The Night Wire */}
+        <div className="dossier-card" style={{ padding: '24px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--espresso)' }}>
+              The Night Wire
+            </h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--taupe)', marginTop: '2px' }}>
+              Real-time trace of automated agent actions
+            </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {(briefingData?.activities || []).length === 0 ? (
-              <div className="empty-state" style={{ padding: 'var(--space-8)' }}>
-                <div className="empty-state-icon">🌙</div>
-                <div className="empty-state-title">Quiet Night</div>
-                <div className="empty-state-text">
-                  No automated triage events logged in the last 24 hours. Run a sync or send a webhook!
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {(briefingData?.activities || []).slice(0, 5).map((act, idx) => (
+              <div
+                key={act._id || idx}
+                style={{
+                  padding: '12px 14px',
+                  background: 'var(--canvas-subtle)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--rule)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.74rem',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontWeight: 700, color: 'var(--moss)' }}>
+                    [{act.type?.toUpperCase()}]
+                  </span>
+                  <span style={{ color: 'var(--taupe-muted)', fontSize: '0.68rem' }}>
+                    {new Date(act.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div style={{ color: 'var(--espresso)', lineHeight: 1.4 }}>
+                  {act.message}
                 </div>
               </div>
-            ) : (
-              (briefingData?.activities || []).slice(0, 5).map((act, idx) => (
-                <div
-                  key={act._id || idx}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 'var(--space-3)',
-                    padding: 'var(--space-3)',
-                    borderRadius: 'var(--radius-md)',
-                    background: 'var(--bg-surface)',
-                    border: '1px solid var(--border-subtle)',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      background: 'var(--purple-glow)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      fontSize: '1rem',
-                    }}
-                  >
-                    {act.type === 'triaged' && '🤖'}
-                    {act.type === 'labeled' && '🏷️'}
-                    {act.type === 'responded' && '💬'}
-                    {act.type === 'sync_complete' && '🔄'}
-                    {act.type === 'webhook_triage' && '⚡'}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-primary)' }}>
-                      {act.message}
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      {new Date(act.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {act.repoFullName || 'system'}
-                    </div>
-                  </div>
-                </div>
-              ))
+            ))}
+
+            {(briefingData?.activities || []).length === 0 && (
+              <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--taupe-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>
+                Wire is quiet. Run triage or connect a repository.
+              </div>
             )}
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

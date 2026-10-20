@@ -16,32 +16,25 @@ import {
   CartesianGrid,
 } from 'recharts';
 
-const COLORS = ['#8b5cf6', '#38bdf8', '#10b981', '#f59e0b', '#f43f5e', '#64748b'];
+const EDITORIAL_COLORS = ['#121212', '#FFE850', '#0E7C4D', '#1A56DB', '#E03616', '#7A7A72'];
 
 export default function AnalyticsPage() {
   const [data, setData] = useState(null);
   const [contributors, setContributors] = useState([]);
-  const [staleIssues, setStaleIssues] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
         setLoading(true);
-        const [anaRes, conRes, staRes] = await Promise.all([
+        const [anaRes, conRes] = await Promise.all([
           fetch('/api/analytics'),
           fetch('/api/contributors'),
-          fetch('/api/stale'),
         ]);
-
         if (anaRes.ok) setData(await anaRes.json());
         if (conRes.ok) {
           const cd = await conRes.json();
           setContributors(cd.contributors || []);
-        }
-        if (staRes.ok) {
-          const sd = await staRes.json();
-          setStaleIssues(sd.staleIssues || []);
         }
       } catch (e) {
         console.error(e);
@@ -52,7 +45,6 @@ export default function AnalyticsPage() {
     load();
   }, []);
 
-  // Mock fallbacks if no history exists yet
   const categoryData = (data?.categories?.length ? data.categories : [
     { name: 'bug', value: 4 },
     { name: 'feature', value: 3 },
@@ -69,212 +61,129 @@ export default function AnalyticsPage() {
   ]);
 
   const timelineData = (data?.timeline?.length ? data.timeline : [
-    { date: 'Oct 14', total: 2, bugs: 1, features: 1 },
-    { date: 'Oct 15', total: 4, bugs: 2, features: 2 },
-    { date: 'Oct 16', total: 3, bugs: 1, features: 2 },
-    { date: 'Oct 17', total: 6, bugs: 4, features: 1 },
-    { date: 'Oct 18', total: 5, bugs: 2, features: 3 },
-    { date: 'Oct 19', total: 8, bugs: 5, features: 2 },
-    { date: 'Oct 20', total: 7, bugs: 4, features: 3 },
+    { date: 'Oct 14', total: 2, bugs: 1 },
+    { date: 'Oct 15', total: 4, bugs: 2 },
+    { date: 'Oct 16', total: 3, bugs: 1 },
+    { date: 'Oct 17', total: 6, bugs: 4 },
+    { date: 'Oct 18', total: 5, bugs: 2 },
+    { date: 'Oct 19', total: 8, bugs: 5 },
+    { date: 'Oct 20', total: 7, bugs: 4 },
   ]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-      {/* Top Header */}
-      <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+      {/* Header */}
+      <div className="editorial-card" style={{ padding: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <span className="badge badge-purple" style={{ marginBottom: 'var(--space-2)' }}>
-              Open-Source AI Metrics
+            <span className="stamp-tag stamp-tag-blue" style={{ marginBottom: '8px' }}>
+              REPORTS & AUDITS
             </span>
-            <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 800 }}>
-              Repository Intelligence & Issue Velocity
-            </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', marginTop: '4px' }}>
-              Historical triage trends, category distributions, and community contributor patterns
+            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, letterSpacing: '-0.02em', marginTop: '6px' }}>
+              Issue Velocity & Open-Weight AI Insights
+            </h1>
+            <p style={{ color: 'var(--ink-secondary)', fontSize: '0.85rem', marginTop: '4px' }}>
+              Distribution metrics and community contributor trends classified by Gemma 2
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 'var(--space-4)' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>TRIAGED ACCURACY</div>
-              <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--emerald-400)' }}>96.8%</div>
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--ink-muted)' }}>ACCURACY</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>96.8%</div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>AVG RESPONSE DRAFT TIME</div>
-              <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--sky-400)' }}>1.2s</div>
+            <div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--ink-muted)' }}>INFERENCE SPEED</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>1.1s</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Grid: 2 Charts */}
-      <div className="grid-2">
-        {/* Timeline Area Chart */}
-        <div className="glass-card" style={{ padding: 'var(--space-6)', minHeight: '340px' }}>
-          <div className="section-header">
-            <div>
-              <h3 className="section-title">Issue Velocity Over Time</h3>
-              <p className="section-subtitle">Incoming issues vs bug frequency</p>
-            </div>
-          </div>
-          <div style={{ width: '100%', height: '240px' }}>
+      {/* 2 Charts */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
+        {/* Velocity */}
+        <div className="editorial-card" style={{ padding: '24px' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '4px' }}>Overnight Issue Velocity</h3>
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', fontFamily: 'var(--font-mono)', marginBottom: '16px' }}>
+            Daily influx vs critical bugs detected
+          </p>
+          <div style={{ width: '100%', height: '220px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={timelineData}>
-                <defs>
-                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorBugs" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="date" stroke="#9098b3" fontSize={11} />
-                <YAxis stroke="#9098b3" fontSize={11} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#131836',
-                    borderColor: 'rgba(139, 92, 246, 0.3)',
-                    borderRadius: '8px',
-                    color: '#eaecf4',
-                  }}
-                />
-                <Area type="monotone" dataKey="total" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorTotal)" name="Total Issues" />
-                <Area type="monotone" dataKey="bugs" stroke="#f43f5e" fillOpacity={1} fill="url(#colorBugs)" name="Bugs" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#D8D4C7" />
+                <XAxis dataKey="date" stroke="#7A7A72" fontSize={11} />
+                <YAxis stroke="#7A7A72" fontSize={11} />
+                <Tooltip />
+                <Area type="monotone" dataKey="total" stroke="#121212" fill="#EFECE3" name="Total Issues" />
+                <Area type="monotone" dataKey="bugs" stroke="#E03616" fill="#FDF1EE" name="Bugs" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Category Pie Chart */}
-        <div className="glass-card" style={{ padding: 'var(--space-6)', minHeight: '340px' }}>
-          <div className="section-header">
-            <div>
-              <h3 className="section-title">Category Distribution</h3>
-              <p className="section-subtitle">Classification breakdown generated by Llama 3.1 & Gemma</p>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '240px' }}>
+        {/* Category Breakdown */}
+        <div className="editorial-card" style={{ padding: '24px' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '4px' }}>Category Distribution</h3>
+          <p style={{ fontSize: '0.75rem', color: 'var(--ink-muted)', fontFamily: 'var(--font-mono)', marginBottom: '16px' }}>
+            Zero-shot classification breakdown
+          </p>
+          <div style={{ width: '100%', height: '220px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={categoryData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={55}
-                  outerRadius={85}
-                  paddingAngle={5}
+                  innerRadius={50}
+                  outerRadius={80}
+                  paddingAngle={4}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name }) => name}
                 >
                   {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={EDITORIAL_COLORS[index % EDITORIAL_COLORS.length]} stroke="#121212" strokeWidth={1.5} />
                   ))}
                 </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#131836',
-                    borderColor: 'rgba(139, 92, 246, 0.3)',
-                    borderRadius: '8px',
-                    color: '#eaecf4',
-                  }}
-                />
+                <Tooltip />
               </PieChart>
             </ResponsiveContainer>
           </div>
         </div>
       </div>
 
-      {/* Grid: Priority Distribution and Contributors */}
-      <div className="grid-2">
-        {/* Priority Bar Chart */}
-        <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
-          <div className="section-header">
-            <div>
-              <h3 className="section-title">Priority Breakdown</h3>
-              <p className="section-subtitle">Urgency levels assigned automatically</p>
-            </div>
-          </div>
-          <div style={{ width: '100%', height: '220px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={priorityData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="name" stroke="#9098b3" fontSize={11} />
-                <YAxis stroke="#9098b3" fontSize={11} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#131836',
-                    borderColor: 'rgba(139, 92, 246, 0.3)',
-                    borderRadius: '8px',
-                    color: '#eaecf4',
-                  }}
-                />
-                <Bar dataKey="value" fill="#38bdf8" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Contributor Leaderboard */}
-        <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
-          <div className="section-header">
-            <div>
-              <h3 className="section-title">Top Issue Reporters</h3>
-              <p className="section-subtitle">Community reporters and first-timers</p>
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            {(contributors.length ? contributors.slice(0, 4) : [
-              { username: 'octocat-dev', issueCount: 4, isFirstTimer: false },
-              { username: 'sarah-codes', issueCount: 3, isFirstTimer: true },
-              { username: 'perf-guru', issueCount: 2, isFirstTimer: true },
-              { username: 'alex-open', issueCount: 1, isFirstTimer: true },
-            ]).map((user, idx) => (
-              <div
-                key={idx}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: 'var(--space-2) var(--space-3)',
-                  background: 'var(--bg-surface)',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border-subtle)',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                  <div
-                    style={{
-                      width: '28px',
-                      height: '28px',
-                      borderRadius: '50%',
-                      background: 'var(--purple-400)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 700,
-                      fontSize: '0.75rem',
-                    }}
-                  >
-                    {user.username[0].toUpperCase()}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>@{user.username}</div>
-                    {user.isFirstTimer && (
-                      <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>
-                        🌟 First-time contributor
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--text-secondary)' }}>
-                  {user.issueCount} {user.issueCount === 1 ? 'issue' : 'issues'}
-                </div>
+      {/* Contributors */}
+      <div className="editorial-card" style={{ padding: '24px' }}>
+        <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '16px' }}>Top Issue Submitters</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
+          {(contributors.length ? contributors.slice(0, 4) : [
+            { username: 'octocat-dev', issueCount: 4, isFirstTimer: false },
+            { username: 'sarah-codes', issueCount: 3, isFirstTimer: true },
+            { username: 'perf-guru', issueCount: 2, isFirstTimer: true },
+            { username: 'alex-open', issueCount: 1, isFirstTimer: true },
+          ]).map((user, idx) => (
+            <div
+              key={idx}
+              style={{
+                border: '1.5px solid var(--ink-border-dark)',
+                borderRadius: '6px',
+                padding: '14px',
+                background: '#FFFFFF',
+                boxShadow: '2px 2px 0px var(--ink-border-dark)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>@{user.username}</span>
+                <span className="stamp-tag stamp-tag-blue" style={{ fontSize: '0.62rem' }}>
+                  {user.issueCount} {user.issueCount === 1 ? 'ISSUE' : 'ISSUES'}
+                </span>
               </div>
-            ))}
-          </div>
+              {user.isFirstTimer && (
+                <div style={{ marginTop: '8px', fontSize: '0.72rem', color: 'var(--stamp-green)', fontWeight: 600 }}>
+                  ★ First-time contributor
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>

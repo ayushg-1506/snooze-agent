@@ -45,7 +45,7 @@ export default function ReposPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        addToast(`Successfully connected ${newRepoName}!`, 'success');
+        addToast(`Connected ${newRepoName}!`, 'success');
         setNewRepoName('');
         setShowAddModal(false);
         fetchRepos();
@@ -70,7 +70,7 @@ export default function ReposPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        addToast(`Triage finished: ${data.results?.triaged || 0} issues processed.`, 'success');
+        addToast(`Triage complete: ${data.results?.triaged || 0} issues sorted.`, 'success');
         fetchRepos();
       } else {
         addToast(data.error || 'Sync failed', 'error');
@@ -100,148 +100,122 @@ export default function ReposPage() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       {/* Header */}
-      <div className="glass-card" style={{ padding: 'var(--space-6)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
+      <div className="editorial-card" style={{ padding: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
-            <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 800 }}>Connected Repositories</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-sm)', marginTop: '4px' }}>
-              Manage GitHub repositories monitored by Snooze Agent for overnight automated triage.
+            <span className="stamp-tag stamp-tag-green" style={{ marginBottom: '8px' }}>
+              AUTONOMOUS WATCH
+            </span>
+            <h1 style={{ fontSize: '1.6rem', fontWeight: 800, letterSpacing: '-0.02em', marginTop: '6px' }}>
+              Connected Repositories
+            </h1>
+            <p style={{ color: 'var(--ink-secondary)', fontSize: '0.85rem', marginTop: '4px' }}>
+              Manage GitHub repositories audited overnight by Snooze Agent
             </p>
           </div>
-          <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-            + Connect New Repo
+          <button className="btn-ink" onClick={() => setShowAddModal(true)}>
+            + Connect Repository
           </button>
         </div>
       </div>
 
-      {/* Repositories Cards */}
-      {loading ? (
-        <div style={{ padding: 'var(--space-12)', textAlign: 'center', color: 'var(--text-muted)' }}>
-          Loading repositories...
-        </div>
-      ) : repos.length === 0 ? (
-        <div className="glass-card empty-state">
-          <div className="empty-state-icon">📂</div>
-          <div className="empty-state-title">No repositories connected</div>
-          <div className="empty-state-text">
-            Connect a GitHub repository or load the demo dataset to experience autonomous triage.
-          </div>
-          <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-            Connect a Repo
-          </button>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          {repos.map((repo) => (
-            <div
-              key={repo._id || repo.fullName}
-              className="glass-card"
-              style={{ padding: 'var(--space-6)' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
-                  <img
-                    src={repo.avatarUrl || 'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png'}
-                    alt=""
-                    className="avatar avatar-lg"
-                  />
-                  <div>
-                    <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 700 }}>
-                      {repo.fullName}
-                    </h3>
-                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                      {repo.description || 'Monitored repository'}
-                    </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginTop: 'var(--space-2)', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-                      <span>⭐ {repo.stars || 0} stars</span>
-                      <span>🍴 {repo.forks || 0} forks</span>
-                      <span>📌 {repo.openIssuesCount || 0} open issues</span>
-                      <span>
-                        Last synced: {repo.lastSynced ? new Date(repo.lastSynced).toLocaleString() : 'Never'}
-                      </span>
-                    </div>
-                  </div>
+      {/* Repo Cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {repos.map((repo) => (
+          <div key={repo._id || repo.fullName} className="editorial-card" style={{ padding: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>{repo.fullName}</h3>
+                  <span className="stamp-tag stamp-tag-green">ACTIVE</span>
                 </div>
+                <p style={{ color: 'var(--ink-secondary)', fontSize: '0.85rem', marginTop: '4px' }}>
+                  {repo.description || 'Monitored repository'}
+                </p>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => handleSyncRepo(repo.fullName)}
-                    disabled={syncing}
-                  >
-                    {syncing ? 'Triaging...' : '🔄 Run Triage Now'}
-                  </button>
-                  <button
-                    className="btn btn-ghost btn-sm"
-                    style={{ color: 'var(--rose-400)' }}
-                    onClick={() => handleDisconnect(repo.fullName)}
-                  >
-                    Disconnect
-                  </button>
+                <div style={{ display: 'flex', gap: '16px', marginTop: '12px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--ink-muted)' }}>
+                  <span>★ {repo.stars || 0} STARS</span>
+                  <span>🍴 {repo.forks || 0} FORKS</span>
+                  <span>📌 {repo.openIssuesCount || 0} OPEN</span>
+                  <span>LAST SYNCED: {repo.lastSynced ? new Date(repo.lastSynced).toLocaleTimeString() : 'Never'}</span>
                 </div>
               </div>
 
-              {/* Webhook Configuration Guide */}
-              <div
-                style={{
-                  marginTop: 'var(--space-4)',
-                  paddingTop: 'var(--space-3)',
-                  borderTop: '1px solid var(--border-subtle)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: 'var(--space-2)',
-                  fontSize: 'var(--text-xs)',
-                  color: 'var(--text-secondary)',
-                }}
-              >
-                <div>
-                  <strong>Live Webhook URL:</strong>{' '}
-                  <code style={{ background: 'var(--bg-deep)', padding: '2px 6px', borderRadius: '4px', color: 'var(--purple-300)' }}>
-                    https://your-domain.tech/api/webhooks/github
-                  </code>
-                </div>
-                <span className="badge badge-sky">Event: Issues (opened, reopened)</span>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  className="btn-outline btn-pill-sm"
+                  onClick={() => handleSyncRepo(repo.fullName)}
+                  disabled={syncing}
+                >
+                  {syncing ? 'Triaging...' : '🔄 Run Triage Now'}
+                </button>
+                <button
+                  className="btn-outline btn-pill-sm"
+                  style={{ color: 'var(--stamp-red)' }}
+                  onClick={() => handleDisconnect(repo.fullName)}
+                >
+                  Disconnect
+                </button>
               </div>
             </div>
-          ))}
-        </div>
-      )}
 
-      {/* Add Repo Modal */}
+            {/* Webhook endpoint */}
+            <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px dashed var(--ink-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--ink-secondary)' }}>
+                <strong>GITHUB WEBHOOK ENDPOINT:</strong>{' '}
+                <span style={{ background: 'var(--bg-muted)', padding: '2px 8px', borderRadius: '3px' }}>
+                  https://your-domain.tech/api/webhooks/github
+                </span>
+              </div>
+              <span className="stamp-tag stamp-tag-blue" style={{ fontSize: '0.62rem' }}>EVENT: ISSUES</span>
+            </div>
+          </div>
+        ))}
+
+        {repos.length === 0 && (
+          <div className="editorial-card" style={{ padding: '64px', textAlign: 'center' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📂</div>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>No repositories connected</h3>
+            <p style={{ color: 'var(--ink-secondary)', fontSize: '0.85rem', marginTop: '4px', marginBottom: '20px' }}>
+              Connect your first GitHub repository to start overnight triage.
+            </p>
+            <button className="btn-ink" onClick={() => setShowAddModal(true)}>
+              Connect Repository
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Connect Modal */}
       {showAddModal && (
-        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 700 }}>Connect GitHub Repository</h3>
-              <button className="btn btn-ghost btn-sm" onClick={() => setShowAddModal(false)}>✕</button>
+        <div className="editorial-modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="editorial-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+            <div style={{ padding: '20px', borderBottom: '1.5px solid var(--ink-border-dark)', display: 'flex', justifyContent: 'space-between' }}>
+              <h3 style={{ fontWeight: 800 }}>Connect Repository</h3>
+              <button onClick={() => setShowAddModal(false)}>✕</button>
             </div>
             <form onSubmit={handleConnectRepo}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-                <div className="input-group">
-                  <label className="input-label">Repository Name (owner/repo)</label>
-                  <input
-                    type="text"
-                    className="input"
-                    placeholder="e.g. ayushg-1506/snooze-agent"
-                    value={newRepoName}
-                    onChange={(e) => setNewRepoName(e.target.value)}
-                    required
-                  />
-                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-                    Make sure your GitHub Token in .env.local has read access to this repository.
-                  </span>
-                </div>
+              <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <label style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700 }}>
+                  REPOSITORY (OWNER/REPO)
+                </label>
+                <input
+                  type="text"
+                  className="input-editorial"
+                  placeholder="e.g. ayushg-1506/snooze-agent"
+                  value={newRepoName}
+                  onChange={(e) => setNewRepoName(e.target.value)}
+                  required
+                />
               </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-ghost" onClick={() => setShowAddModal(false)}>
+              <div style={{ padding: '16px 24px', borderTop: '1px solid var(--ink-border)', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button type="button" className="btn-outline btn-pill-sm" onClick={() => setShowAddModal(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={connecting}>
-                  {connecting ? 'Connecting...' : 'Connect Repository'}
+                <button type="submit" className="btn-ink btn-pill-sm" disabled={connecting}>
+                  {connecting ? 'Connecting...' : 'Connect'}
                 </button>
               </div>
             </form>

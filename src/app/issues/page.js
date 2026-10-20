@@ -85,7 +85,7 @@ function IssuesContent() {
       });
       const data = await res.json();
       if (res.ok) {
-        addToast('AI Draft Response posted to GitHub!', 'success');
+        addToast('Maintainer response published to GitHub!', 'success');
         fetchIssues();
         if (selectedIssue?._id === issue._id) {
           setSelectedIssue({
@@ -104,24 +104,24 @@ function IssuesContent() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-      {/* Header and Filter Controls */}
-      <div className="glass-card" style={{ padding: 'var(--space-5)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
-          <div style={{ flex: 1, minWidth: '260px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+      {/* Search and Filters Header */}
+      <div className="dossier-card" style={{ padding: '18px 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ flex: 1, minWidth: '280px' }}>
             <input
               type="text"
-              className="input"
-              placeholder="Search issues by title, body, or author..."
+              className="input-dossier"
+              placeholder="Search docket by keyword, error trace, or author..."
               style={{ width: '100%' }}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             <select
-              className="input"
+              className="input-dossier"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               style={{ minWidth: '140px' }}
@@ -136,7 +136,7 @@ function IssuesContent() {
             </select>
 
             <select
-              className="input"
+              className="input-dossier"
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
               style={{ minWidth: '140px' }}
@@ -150,119 +150,96 @@ function IssuesContent() {
 
             {(categoryFilter || priorityFilter || searchQuery) && (
               <button
-                className="btn btn-ghost btn-sm"
+                className="btn-nordic-outline"
+                style={{ padding: '6px 12px', fontSize: '0.78rem' }}
                 onClick={() => {
                   setCategoryFilter('');
                   setPriorityFilter('');
                   setSearchQuery('');
                 }}
               >
-                Reset Filters
+                Reset
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Issues Table / List */}
-      <div className="glass-card" style={{ overflow: 'hidden' }}>
+      {/* Issues Table */}
+      <div className="dossier-card" style={{ overflow: 'hidden' }}>
         {loading ? (
-          <div style={{ padding: 'var(--space-12)', textAlign: 'center', color: 'var(--text-muted)' }}>
-            Loading issue queue...
+          <div style={{ padding: '48px', textAlign: 'center', color: 'var(--taupe-muted)', fontFamily: 'var(--font-mono)' }}>
+            Retrieving triage docket...
           </div>
         ) : issues.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">🦥</div>
-            <div className="empty-state-title">No issues found</div>
-            <div className="empty-state-text">
-              Try adjusting your search criteria, or trigger an overnight sync.
-            </div>
+          <div style={{ padding: '64px 24px', textAlign: 'center' }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>🦥</div>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>No issues found</h3>
+            <p style={{ color: 'var(--taupe)', fontSize: '0.85rem', marginTop: '4px' }}>
+              No issues matched your filters.
+            </p>
           </div>
         ) : (
-          <table className="data-table">
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr>
-                <th style={{ width: '80px' }}>Issue</th>
-                <th>Title & AI Summary</th>
-                <th>Category</th>
-                <th>Priority</th>
-                <th>Author</th>
-                <th>Labels</th>
-                <th>Status</th>
-                <th style={{ textAlign: 'right' }}>Actions</th>
+              <tr style={{ background: 'var(--canvas-subtle)', borderBottom: '1px solid var(--rule)' }}>
+                <th style={{ padding: '12px 18px', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--taupe)', textTransform: 'uppercase' }}>Issue</th>
+                <th style={{ padding: '12px 18px', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--taupe)', textTransform: 'uppercase' }}>Title & AI Summary</th>
+                <th style={{ padding: '12px 18px', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--taupe)', textTransform: 'uppercase' }}>Category</th>
+                <th style={{ padding: '12px 18px', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--taupe)', textTransform: 'uppercase' }}>Priority</th>
+                <th style={{ padding: '12px 18px', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--taupe)', textTransform: 'uppercase' }}>Author</th>
+                <th style={{ padding: '12px 18px', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--taupe)', textTransform: 'uppercase' }}>Labels</th>
+                <th style={{ padding: '12px 18px', textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--taupe)', textTransform: 'uppercase' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {issues.map((issue) => (
                 <tr
                   key={issue._id}
-                  style={{ cursor: 'pointer' }}
+                  style={{ cursor: 'pointer', borderBottom: '1px solid var(--rule)' }}
                   onClick={() => setSelectedIssue(issue)}
                 >
-                  <td style={{ fontWeight: 700, color: 'var(--purple-300)' }}>
+                  <td style={{ padding: '14px 18px', fontFamily: 'var(--font-mono)', fontWeight: 800 }}>
                     #{issue.number}
                   </td>
-                  <td>
-                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '2px' }}>
+                  <td style={{ padding: '14px 18px' }}>
+                    <div style={{ fontWeight: 700, color: 'var(--espresso)', marginBottom: '2px' }}>
                       {issue.title}
                     </div>
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--taupe)' }}>
                       {issue.triage?.summary || issue.body?.slice(0, 90)}
                     </div>
                   </td>
-                  <td>
-                    <span className={`badge ${
-                      issue.triage?.category === 'bug'
-                        ? 'badge-rose'
-                        : issue.triage?.category === 'feature'
-                        ? 'badge-purple'
-                        : 'badge-sky'
-                    }`}>
+                  <td style={{ padding: '14px 18px' }}>
+                    <span className="chip chip-sage">
                       {issue.triage?.category || 'unknown'}
                     </span>
                   </td>
-                  <td>
-                    <span className={`badge ${
-                      issue.triage?.priority === 'critical'
-                        ? 'badge-rose'
-                        : issue.triage?.priority === 'high'
-                        ? 'badge-amber'
-                        : 'badge-neutral'
-                    }`}>
-                      {issue.triage?.priority || 'normal'}
+                  <td style={{ padding: '14px 18px' }}>
+                    {issue.triage?.priority === 'critical' ? (
+                      <span className="chip chip-terracotta">CRITICAL</span>
+                    ) : issue.triage?.priority === 'high' ? (
+                      <span className="chip chip-ochre">HIGH</span>
+                    ) : (
+                      <span className="chip chip-neutral">{issue.triage?.priority || 'NORMAL'}</span>
+                    )}
+                  </td>
+                  <td style={{ padding: '14px 18px' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'var(--taupe)' }}>
+                      @{issue.author}
                     </span>
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                      {issue.authorAvatar && (
-                        <img src={issue.authorAvatar} alt="" className="avatar avatar-sm" />
-                      )}
-                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>
-                        @{issue.author}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
+                  <td style={{ padding: '14px 18px' }}>
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                       {(issue.labels || []).slice(0, 2).map((l, i) => (
-                        <span key={i} className="badge badge-neutral" style={{ fontSize: '0.7rem' }}>
+                        <span key={i} className="chip chip-neutral" style={{ fontSize: '0.65rem' }}>
                           {l}
                         </span>
                       ))}
                     </div>
                   </td>
-                  <td>
-                    {issue.triage?.labelsApplied ? (
-                      <span style={{ color: 'var(--emerald-400)', fontSize: 'var(--text-xs)' }}>✓ Labeled</span>
-                    ) : (
-                      <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>Pending Label</span>
-                    )}
-                  </td>
-                  <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      onClick={() => setSelectedIssue(issue)}
-                    >
+                  <td style={{ padding: '14px 18px', textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
+                    <button className="btn-nordic" style={{ padding: '5px 12px', fontSize: '0.75rem' }} onClick={() => setSelectedIssue(issue)}>
                       Review
                     </button>
                   </td>
@@ -273,114 +250,95 @@ function IssuesContent() {
         )}
       </div>
 
-      {/* Modal: Issue Detail & AI Review */}
+      {/* Modal: Editorial Docket Review */}
       {selectedIssue && (
-        <div className="modal-overlay" onClick={() => setSelectedIssue(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '780px' }}>
-            <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-                <span style={{ fontSize: 'var(--text-lg)', fontWeight: 800, color: 'var(--purple-300)' }}>
+        <div className="dossier-modal-overlay" onClick={() => setSelectedIssue(null)}>
+          <div className="dossier-modal" onClick={(e) => e.stopPropagation()}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--rule)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '1.05rem', color: 'var(--moss)' }}>
                   #{selectedIssue.number}
                 </span>
-                <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 700 }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--espresso)' }}>
                   {selectedIssue.title}
                 </h3>
               </div>
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => setSelectedIssue(null)}
-                style={{ fontSize: '1.25rem' }}
-              >
-                ✕
-              </button>
+              <button onClick={() => setSelectedIssue(null)} style={{ fontSize: '1.2rem', color: 'var(--taupe)' }}>✕</button>
             </div>
 
-            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-              {/* Meta Ribbon */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-                  <span className={`badge ${selectedIssue.triage?.category === 'bug' ? 'badge-rose' : 'badge-purple'}`}>
-                    Category: {selectedIssue.triage?.category}
-                  </span>
-                  <span className={`badge ${selectedIssue.triage?.priority === 'critical' ? 'badge-rose' : 'badge-amber'}`}>
-                    Priority: {selectedIssue.triage?.priority}
-                  </span>
-                  <span className="badge badge-sky">
-                    Sentiment: {selectedIssue.triage?.sentiment}
-                  </span>
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <span className="chip chip-sage">CATEGORY: {selectedIssue.triage?.category}</span>
+                  <span className="chip chip-terracotta">PRIORITY: {selectedIssue.triage?.priority}</span>
+                  <span className="chip chip-celadon">SENTIMENT: {selectedIssue.triage?.sentiment}</span>
                 </div>
                 {selectedIssue.url && (
-                  <a
-                    href={selectedIssue.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ fontSize: 'var(--text-xs)', color: 'var(--purple-300)', textDecoration: 'underline' }}
-                  >
+                  <a href={selectedIssue.url} target="_blank" rel="noreferrer" style={{ fontSize: '0.75rem', color: 'var(--moss)', fontFamily: 'var(--font-mono)', textDecoration: 'underline' }}>
                     Open on GitHub ↗
                   </a>
                 )}
               </div>
 
-              {/* Original Issue Description */}
-              <div style={{ background: 'var(--bg-deep)', padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-                <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 'var(--space-2)' }}>
-                  ORIGINAL ISSUE TEXT
+              {/* Original Issue Text */}
+              <div style={{ background: 'var(--canvas-subtle)', padding: '16px', border: '1px solid var(--rule)', borderRadius: 'var(--radius-sm)' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', fontWeight: 700, color: 'var(--taupe-muted)', marginBottom: '8px' }}>
+                  ORIGINAL ISSUE DESCRIPTION
                 </div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-primary)', whiteSpace: 'pre-wrap', maxHeight: '180px', overflowY: 'auto' }}>
+                <div style={{ fontSize: '0.82rem', lineHeight: 1.6, whiteSpace: 'pre-wrap', maxHeight: '160px', overflowY: 'auto' }}>
                   {selectedIssue.body || 'No description provided.'}
                 </div>
               </div>
 
-              {/* AI Triage Reasoning */}
-              <div style={{ background: 'var(--bg-surface)', padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-default)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
-                  <span style={{ fontSize: '1rem' }}>🦥</span>
-                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--purple-300)' }}>
-                    AI TRIAGE REASONING & SUMMARY
-                  </span>
+              {/* AI Reasoning */}
+              <div style={{ background: 'var(--surface)', padding: '16px', border: '1px solid var(--rule)', borderRadius: 'var(--radius-sm)' }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', fontWeight: 700, color: 'var(--moss)', marginBottom: '6px' }}>
+                  🦥 GEMMA 2 TRIAGE REASONING
                 </div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                <div style={{ fontSize: '0.82rem', lineHeight: 1.5, color: 'var(--espresso)' }}>
                   {selectedIssue.triage?.reasoning || selectedIssue.triage?.summary}
                 </div>
               </div>
 
-              {/* Duplicates Alert if any */}
+              {/* Duplicates Alert */}
               {selectedIssue.triage?.duplicates?.length > 0 && (
-                <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', border: '1px solid var(--amber-400)' }}>
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--amber-400)', marginBottom: 'var(--space-2)' }}>
-                    🔁 POTENTIAL DUPLICATE DETECTED
+                <div style={{ background: 'var(--ochre-wash)', padding: '14px', border: '1px solid var(--ochre)', borderRadius: 'var(--radius-sm)' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 700, color: 'var(--ochre)', marginBottom: '4px' }}>
+                    🔁 SEMANTIC DUPLICATE DETECTED
                   </div>
                   {selectedIssue.triage.duplicates.map((dup, i) => (
-                    <div key={i} style={{ fontSize: 'var(--text-sm)' }}>
-                      Matches <strong>#{dup.issueNumber}</strong> ({Math.round(dup.confidence * 100)}% match): {dup.reason}
+                    <div key={i} style={{ fontSize: '0.8rem' }}>
+                      Shares {Math.round(dup.confidence * 100)}% similarity with <strong>#{dup.issueNumber}</strong>: {dup.reason}
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* AI Draft Response Section */}
-              <div style={{ background: 'linear-gradient(135deg, rgba(20, 24, 54, 0.9), rgba(12, 16, 34, 0.9))', padding: 'var(--space-4)', borderRadius: 'var(--radius-md)', border: '1px solid var(--purple-400)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--sky-400)' }}>
-                    ✍️ AI DRAFTED RESPONSE
+              {/* AI Draft Response */}
+              <div style={{ background: '#FFFFFF', padding: '18px', border: '1px solid var(--moss)', borderRadius: 'var(--radius-sm)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', fontWeight: 700, color: 'var(--moss)' }}>
+                    ✍️ MAINTAINER DRAFT RESPONSE
                   </div>
                   {selectedIssue.triage?.responsePosted && (
-                    <span className="badge badge-emerald">✓ Already Posted</span>
+                    <span className="chip chip-sage">PUBLISHED</span>
                   )}
                 </div>
-                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-primary)', lineHeight: 1.6, marginBottom: 'var(--space-4)' }}>
+                <div style={{ fontSize: '0.85rem', lineHeight: 1.6, marginBottom: '16px', color: 'var(--espresso)' }}>
                   {selectedIssue.triage?.draftResponse || 'No response drafted.'}
                 </div>
-                <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+                <div style={{ display: 'flex', gap: '10px' }}>
                   <button
-                    className="btn btn-primary btn-sm"
+                    className="btn-nordic"
+                    style={{ fontSize: '0.78rem', padding: '6px 14px' }}
                     onClick={() => handlePostResponse(selectedIssue)}
                     disabled={actionLoading || selectedIssue.triage?.responsePosted}
                   >
-                    {selectedIssue.triage?.responsePosted ? 'Posted to GitHub' : 'Approve & Post to GitHub'}
+                    {selectedIssue.triage?.responsePosted ? 'Published' : 'Approve & Post to GitHub'}
                   </button>
                   <button
-                    className="btn btn-secondary btn-sm"
+                    className="btn-nordic-outline"
+                    style={{ fontSize: '0.78rem', padding: '6px 14px' }}
                     onClick={() => handleApplyLabels(selectedIssue)}
                     disabled={actionLoading || selectedIssue.triage?.labelsApplied}
                   >
@@ -390,8 +348,8 @@ function IssuesContent() {
               </div>
             </div>
 
-            <div className="modal-footer">
-              <button className="btn btn-ghost" onClick={() => setSelectedIssue(null)}>
+            <div style={{ padding: '14px 24px', borderTop: '1px solid var(--rule)', textAlign: 'right' }}>
+              <button className="btn-nordic-outline" style={{ padding: '6px 14px', fontSize: '0.78rem' }} onClick={() => setSelectedIssue(null)}>
                 Close
               </button>
             </div>
@@ -404,7 +362,7 @@ function IssuesContent() {
 
 export default function IssuesPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 'var(--space-12)', textAlign: 'center', color: 'var(--text-muted)' }}>Loading issues...</div>}>
+    <Suspense fallback={<div style={{ padding: '48px', textAlign: 'center', fontFamily: 'var(--font-mono)' }}>Loading...</div>}>
       <IssuesContent />
     </Suspense>
   );
