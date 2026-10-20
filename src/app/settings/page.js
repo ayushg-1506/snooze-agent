@@ -115,19 +115,19 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Hacktoberfest Prize Narrative */}
+      {/* Architectural Philosophy */}
       <div className="dossier-card" style={{ padding: '24px', background: 'var(--canvas-subtle)' }}>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 700, color: 'var(--moss)', marginBottom: '6px' }}>
-          🦥 HACKTOBERFEST 2026 · WEEK 3 "SLOW AND STEADY"
+          🦥 PHILOSOPHY & DESIGN PRINCIPLES
         </div>
         <p style={{ fontSize: '0.82rem', color: 'var(--espresso)', lineHeight: 1.6, marginBottom: '14px' }}>
-          Snooze Agent protects developer focus by letting open-weight AI (Google Gemma 2 & Meta Llama 3.1) handle overnight issue triage autonomously. The project qualifies for the Top Prize ($250 + DEV++), Best Use of Gemma ($200), Best Use of MongoDB Atlas ($100), and Best Use of Render ($200).
+          Snooze Agent is built to eliminate maintainer burnout. Instead of waking up to frantic notifications, open-weight models (Qwen, Llama 3.1, and Gemma) analyze issue context, cluster duplicates, and prepare initial response drafts so maintainers can start their day with a clear, calm queue.
         </p>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <span className="chip chip-sage">Best Use of Gemma ($200)</span>
-          <span className="chip chip-celadon">Best Use of MongoDB Atlas ($100)</span>
-          <span className="chip chip-ochre">Best Use of Render ($200)</span>
-          <span className="chip chip-neutral">Best Use of .tech Domain ($100)</span>
+          <span className="chip chip-sage">Autonomous Night Ingestion</span>
+          <span className="chip chip-celadon">Semantic Duplicate Clustering</span>
+          <span className="chip chip-ochre">Sentiment & Urgency Scoring</span>
+          <span className="chip chip-neutral">Zero Notification Noise</span>
         </div>
       </div>
     </div>

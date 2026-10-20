@@ -4,7 +4,7 @@ import AppShell from '@/components/AppShell';
 export const metadata = {
   title: 'Snooze Agent — AI GitHub Issue Triage Bot',
   description: 'Wake up to a sorted, labeled, prioritized issue queue with AI responses drafted by open-weight AI.',
-  keywords: ['Hacktoberfest', 'AI Agent', 'Open Source', 'GitHub Triage', 'Gemma', 'Llama 3.1', 'Dev Challenges'],
+  keywords: ['AI Agent', 'Open Source', 'GitHub Triage', 'Gemma', 'Llama 3.1'],
   authors: [{ name: 'Ayush' }],
   icons: {
     icon: '/favicon.svg',

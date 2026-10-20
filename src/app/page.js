@@ -97,7 +97,7 @@ export default function Dashboard() {
       <section style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span className="chip chip-sage">
-            EDITION 03 · HACKTOBERFEST SLOW & STEADY
+            AUTONOMOUS REPO WATCH · THE MORNING DOSSIER
           </span>
           <span style={{ fontSize: '0.78rem', color: 'var(--taupe)', fontFamily: 'var(--font-mono)' }}>
             DISPATCH FOR {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()}

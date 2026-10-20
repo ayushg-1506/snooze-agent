@@ -1,8 +1,12 @@
 # 🦥 Snooze Agent
 
-> **The Autonomous GitHub Issue Triage Bot for Lazy Maintainers.**  
-> *Built with Open-Weight AI (Qwen, Llama 3.1 & Google Gemma) · Powered by MongoDB Atlas & Groq.*  
-> *Submission for Hacktoberfest Open-Source AI Challenge: Week 3 ("Slow and Steady").*
+> **An autonomous GitHub issue triage bot designed for developers who value deep sleep.**  
+> Built with open-weight AI (Qwen, Llama 3.1 & Gemma 2), MongoDB Atlas, and Next.js.
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-snooze--agent.onrender.com-1B2E24?style=for-the-badge&logo=render&logoColor=white)](https://snooze-agent.onrender.com/)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](LICENSE)
+
+🌐 **Deployed App**: [https://snooze-agent.onrender.com/](https://snooze-agent.onrender.com/)
 
 ---
 
@@ -18,29 +22,16 @@
 
 ## 💡 What is Snooze Agent?
 
-Sloths move slowly, conserve their energy, and let the world turn at its own pace.  
-Open-source maintainers, however, are constantly bombarded by issues, bug reports, feature requests, and panic notifications in the middle of the night.
+Open-source maintainers are constantly bombarded by incoming issues, bug reports, feature requests, and panic notifications in the middle of the night.
 
-**Snooze Agent channels the sloth philosophy:**  
-Instead of waking up to an overwhelming notification queue, you sleep soundly. Snooze Agent operates autonomously overnight using **open-weight AI models** to:
+**Snooze Agent protects developer focus.**  
+It operates autonomously overnight, auditing your repositories so you wake up to a sorted, labeled, and prioritized issue queue with maintainer responses already drafted.
 
-1. **Ingest & Classify**: Categorizes issues (`bug`, `feature`, `question`, `docs`, `duplicate`, `enhancement`) with calibrated confidence scores.
-2. **Assign Urgency & Sentiment**: Detects production crashes, fatal unhandled rejections, and user frustration levels to prioritize what actually matters.
+1. **Ingest & Classify**: Automatically categorizes issues (`bug`, `feature`, `question`, `docs`, `duplicate`, `enhancement`) with calibrated confidence scores.
+2. **Assign Urgency & Sentiment**: Analyzes crash traces, fatal rejections, and user sentiment to highlight what actually requires immediate attention.
 3. **Detect Duplicates**: Performs semantic text matching across open issues to flag duplicate reports before maintainers waste hours investigating.
 4. **Draft Empathetic Maintainer Responses**: Generates context-aware, constructive responses ready for 1-click publishing to GitHub.
-5. **Publish The Morning Dossier**: Wake up, sip coffee, and review a tranquil, 2-minute executive digest of overnight activity.
-
----
-
-## 🏆 Hacktoberfest Prize Categories Targeted
-
-| Category | Why Snooze Agent Qualifies | Prize Value |
-|---|---|---|
-| 🦥 **Slow and Steady (Top Prize)** | Directly embodies the sloth theme: rewards maintainer laziness and eliminates notification anxiety using open AI. | **$250 + DEV++** |
-| ⚡ **Best Use of Render** | Production-ready full-stack Next.js app hosted on Render with live GitHub webhook ingestion. | **$200** |
-| 💎 **Best Use of Gemma** | Zero-shot issue classification, reasoning, and response generation powered by open-weight models. | **$200** |
-| 🍃 **Best Use of MongoDB Atlas** | Cloud database storing triage dossiers, issue metadata, and duplicate search clusters. | **$100** |
-| 🌐 **Best Use of a .tech Domain** | Pre-configured for custom domain routing and SSL webhooks. | **$100** |
+5. **The Morning Dossier**: Wake up, sip coffee, and review a tranquil, 2-minute executive digest of overnight activity.
 
 ---
 
@@ -49,18 +40,18 @@ Instead of waking up to an overwhelming notification queue, you sleep soundly. S
 Built with a bespoke **Morning Dossier** aesthetic inspired by modern editorial print craft:
 - **Palette**: Calming Nordic sage (`#4A6B57`), organic moss (`#1B2E24`), natural linen canvas (`#F5F2EB`), and deep espresso typography (`#1A1A18`).
 - **Dark Mode**: High-contrast Nordic Obsidian & Forest Night mode with smooth 1-click toggle.
-- **Craft**: Zero generic AI slop. Crisp 1px rule borders, editorial Newsreader italics, and monospace JetBrains data stamps.
+- **Craft**: Zero generic neon AI glows. Crisp 1px rule borders, editorial Newsreader italics, and monospace JetBrains data stamps.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack & Architecture
 
-- **Framework**: Next.js 16 (App Router) + Vanilla CSS Modules & Tokens
-- **Open-Weight AI**: Groq API (`qwen/qwen3.8-27b` / `llama-3.1-70b`) & Google Gemma 2 (`gemma-2-27b-it`)
-- **Database**: MongoDB Atlas M0 (with resilient local storage fallback)
+- **Application Framework**: Next.js 16 (App Router) + Vanilla CSS Modules & Tokens
+- **Open-Weight AI Runtime**: Groq API (`qwen/qwen3.8-27b` / `llama-3.1-70b`) & Google Gemma 2 (`gemma-2-27b-it`)
+- **Data Layer**: MongoDB Atlas M0 (with resilient local storage fallback)
 - **GitHub Integration**: Octokit REST API + Live Webhook Receiver (`/api/webhooks/github`)
-- **Charts**: Recharts dynamic velocity and category distribution
-- **Deployment**: Render Web Service
+- **Analytics Visuals**: Recharts dynamic velocity and category distribution
+- **Hosting**: Render Web Service
 
 ---
 
@@ -103,35 +94,33 @@ Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
 ## ☁️ Deploying to Render
 
-### Step 1: Create a New Web Service on Render
-1. Go to [dashboard.render.com](https://dashboard.render.com/) and click **New → Web Service**.
+### 1. Create Web Service
+1. In the [Render Dashboard](https://dashboard.render.com/), create a new **Web Service**.
 2. Connect your GitHub repository: `ayushg-1506/snooze-agent`.
 
-### Step 2: Configure Build & Start Commands
+### 2. Service Settings
 - **Environment**: `Node`
 - **Build Command**: `npm install && npm run build`
 - **Start Command**: `npm start`
 
-### Step 3: Add Environment Variables on Render
-Under **Environment Variables**, add:
+### 3. Environment Variables
+Add the following in Render's Environment settings:
 - `GITHUB_TOKEN`: Your GitHub personal access token
 - `GROQ_API_KEY`: Your Groq API key
 - `MONGODB_URI`: Your MongoDB Atlas connection URI
 - `GOOGLE_API_KEY`: Your Google Gemma API key
-- `NEXT_PUBLIC_APP_URL`: Your Render service URL (e.g., `https://snooze-agent.onrender.com`)
-
-Click **Deploy**!
+- `NEXT_PUBLIC_APP_URL`: `https://snooze-agent.onrender.com`
 
 ---
 
-## 🪝 Setting Up GitHub Webhooks (Real-Time Ingestion)
+## 🪝 Real-Time GitHub Webhooks
 
 To have Snooze Agent automatically triage issues the moment they are opened:
-1. Open your GitHub Repository → **Settings** → **Webhooks** → **Add webhook**.
-2. **Payload URL**: `https://your-app.onrender.com/api/webhooks/github`
+1. Open your GitHub repository → **Settings** → **Webhooks** → **Add webhook**.
+2. **Payload URL**: `https://snooze-agent.onrender.com/api/webhooks/github`
 3. **Content type**: `application/json`
-4. **Which events?**: Select **"Let me select individual events"** → Check **Issues**.
-5. Save webhook. Snooze Agent will now triage incoming issues instantly.
+4. **Events**: Select **"Let me select individual events"** → Check **Issues**.
+5. Save the webhook. Incoming issues will be triaged autonomously in real-time.
 
 ---
 
@@ -140,8 +129,8 @@ To have Snooze Agent automatically triage issues the moment they are opened:
 ```
 snooze-agent/
 ├── public/
-│   ├── favicon.svg              # Custom sloth favicon
-│   └── screenshots/             # Readme interface previews
+│   ├── favicon.svg              # Bespoke sloth favicon
+│   └── screenshots/             # Interface previews
 │       ├── morning-dossier.png
 │       └── patterns-velocity.png
 ├── src/
@@ -169,7 +158,7 @@ snooze-agent/
 │   │   ├── AppShell.js          # Navigation & dark mode controller
 │   │   └── ToastContainer.js    # Notification toast system
 │   └── lib/
-│       ├── ai.js                # Groq (Qwen/Llama) & Gemma triage engine
+│       ├── ai.js                # Groq & Gemma triage engine
 │       ├── github.js            # Octokit REST API wrapper
 │       ├── mongodb.js           # Atlas connection with local fallback
 │       └── triage.js            # Autonomous triage orchestration
@@ -178,4 +167,6 @@ snooze-agent/
 
 ---
 
-*Crafted with 🦥 tranquil patience for Hacktoberfest 2026.*
+## 📄 License
+
+MIT © [ayushg-1506](https://github.com/ayushg-1506)
